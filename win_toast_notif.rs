@@ -43,11 +43,8 @@ impl WinToastNotif {
       self
     }
 
-    pub fn set_title(mut self, title: Option<&str>) -> Self {
-      self.title = match title {
-          Some(t) => Some(t.into()),
-          None => None,
-      };
+    pub fn set_title(mut self, title: &str) -> Self {
+      self.title = Some(title.into());
       self
     }
 
