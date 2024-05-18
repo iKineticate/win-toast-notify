@@ -42,7 +42,8 @@ fn main() {
         .show()
 }
 ```
-![yijianmei](https://github.com/iKineticate/win-toast-notif-rs/assets/115683118/2d0c7908-3fd1-445a-8f27-7fbb4feefd0e)
+
+![yijianmei_screen](https://github.com/iKineticate/win-toast-notif-rs/assets/115683118/64c01312-9507-4423-8e43-cd3be37d8e8d)
 
 
 ## 免责声明
