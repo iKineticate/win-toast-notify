@@ -105,7 +105,7 @@ impl WinToastNotif {
                 </actions>
                 {}
             </toast>
-            "#,
+            "#，
             match &self.notif_open {
                 Some(url) => format!(r#" activationType="protocol" launch="{}""#, url),
                 None => String::new()
@@ -152,7 +152,7 @@ impl WinToastNotif {
                     .map(|action| format!(
                         r#"
                         <action content="{}" activationType="{}" arguments="{}" />
-                        "#,
+                        "#，
                         action.action_content,
                         action.activation_type.as_str(),
                         action.arguments
@@ -192,20 +192,10 @@ impl WinToastNotif {
                 ).unwrap(),
             None => ()
         }
-
-        println!("{}", command
-            .lines()
-            .map(|line| line.trim_start())
-            .filter(|&line| !line.is_empty())
-            .collect::<Vec<&str>>()
-            .join("\n"));
-
         // Run it by PowerShell
         Command::new("powershell")
             .creation_flags(0x08000000)
-            .args(&["-Command", &command])
-            // .stdout(Stdio::null())
-            // .stdin(Stdio::null())
+            。args(&["-Command", &command])
             .output()
             .expect("Failed to execute command");
     }
