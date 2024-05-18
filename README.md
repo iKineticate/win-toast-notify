@@ -12,6 +12,31 @@
 
 这个仓库中的代码可能并不适合用于生产环境，仅供学习和参考。如果你想要在自己的 Rust 项目中添加吐司通知功能，建议你查阅更为成熟和稳定的库，并仔细阅读相关文档。
 
+```rust
+use win_toast_notif::*;
+mod win_toast_notif;
+
+fn main() {
+    WinToastNotif::new()
+      .set_logo(r"C:\Windows\IdentityCRL\WLive48x48.png", LogoCropCircle::True)
+      .set_title(Some("Here's the title."))
+      .set_messages(vec!["Hellow", "World"])
+      .set_actions(vec![
+          Action {
+            activation_type: ActivationType::Protocol,
+            action_content: String::from("Open File"),
+            arguments: String::from(r"C:\Windows\Web\Screen\img100.jpg"),
+          },
+          Action {
+            activation_type: ActivationType::Protocol,
+            action_content: String::from("Open Url"),
+            arguments: String::from("https://www.google.com/"),
+          }
+      ])
+      .show()
+}
+```
+
 ## 免责声明
 
 请注意，这个仓库中的代码仅供参考和学习之用，可能存在 bug 和不足之处。对于任何因使用该代码而造成的损失，我概不负责。
