@@ -1,3 +1,4 @@
+#![windows_subsystem = "windows"] 
 #![allow(dead_code)]
 use std::process::Command;
 use std::os::windows::process::CommandExt;
@@ -21,26 +22,26 @@ pub struct WinToastNotif {
 
 impl WinToastNotif {
     pub fn new() -> Self {
-      Self {
-          app_id: None,
-          notif_open: None,
-          duration: Duration::Short,
-          title: None,
-          messages: Some(vec![String::from("Hellow World")]),
-          logo: None,
-          logo_circle: LogoCropCircle::False,
-          image: None,
-          image_placement: ImagePlacement::Top,
-          actions: None,
-          audio: None,
-          audio_loop: Loop::False,
-          audio_source: None,
-      }
+        Self {
+            app_id: None,
+            notif_open: None,
+            duration: Duration::Short,
+            title: None,
+            messages: Some(vec![String::from("Hellow World")]),
+            logo: None,
+            logo_circle: LogoCropCircle::False,
+            image: None,
+            image_placement: ImagePlacement::Top,
+            actions: None,
+            audio: None,
+            audio_loop: Loop::False,
+            audio_source: None,
+        }
     }
   
     pub fn set_app_id(mut self, id: &str) -> Self {
-      self.app_id = Some(id.into());
-      self
+        self.app_id = Some(id.into());
+        self
     }
 
     pub fn set_duration(mut self, duration: Duration) -> Self {
@@ -54,19 +55,19 @@ impl WinToastNotif {
     }
 
     pub fn set_title(mut self, title: &str) -> Self {
-      self.title = Some(title.into());
-      self
+        self.title = Some(title.into());
+        self
     }
 
     pub fn set_messages(mut self, messages: Vec<&str>) -> Self {
-      self.messages = Some(Box::new(messages.iter().map(|t| t.to_string())).collect());
-      self
+        self.messages = Some(Box::new(messages.iter().map(|t| t.to_string())).collect());
+        self
     }
 
     pub fn set_logo(mut self, path: &str, hint_crop: LogoCropCircle) -> Self {
-      self.logo = Some(path.into());
-      self.logo_circle = hint_crop;
-      self
+        self.logo = Some(path.into());
+        self.logo_circle = hint_crop;
+        self
     }
 
     pub fn set_image(mut self, path: &str, position: ImagePlacement) -> Self {
@@ -92,8 +93,10 @@ impl WinToastNotif {
     }
 
     pub fn show(&self) {
+        // Create a String instance and preallocate 2000 bytes of memory for it, reduce the number of memory reallocations
+        let mut command = String::with_capacity(2000);
         // Start of XML
-        let mut command = String::from("$xml = @\"");
+        command.push_str("$xml = @\"");
         // <visual>
         write!(command, r#"
             <toast{}{}>
@@ -120,15 +123,10 @@ impl WinToastNotif {
                 Duration::Long => r#" duration="long""#,
                 Duration::TimeOut => r#"scenario="incomingCall""#
             },
-            match &self.logo{
-                Some(logo) => format!("\n<image placement=\"appLogoOverride\" {} src=\"{}\"/>", 
-                    match self.logo_circle {
-                        LogoCropCircle::True => r#"hint-crop="circle""#,
-                        LogoCropCircle::False => "",
-                    },
-                    &logo
-                ),
-                None => String::new()
+            match (&self.logo, &self.logo_circle) {
+                (Some(logo), LogoCropCircle::True) => format!("\n<image placement=\"appLogoOverride\" hint-crop=\"circle\" src=\"{}\"/>", &logo),
+                (Some(logo), LogoCropCircle::False) => format!("\n<image placement=\"appLogoOverride\" src=\"{}\"/>", &logo),
+                (None, _) => String::new()
             },
             match &self.title {
                 Some(title) => format!("\n<text>{}</text>", &title),
@@ -141,15 +139,10 @@ impl WinToastNotif {
                     .collect::<String>(),
                 None => String::new()
             },
-            match &self.image{
-                Some(image) => format!("\n<image {} src=\"{}\"/>", 
-                    match self.image_placement {
-                        ImagePlacement::Top => r#"placement="hero""#,
-                        ImagePlacement::Bottom => "",
-                    },
-                    &image
-                ),
-                None => String::new()
+            match (&self.image, &self.image_placement){
+                (Some(image), ImagePlacement::Top) => format!("\n<image placement=\"hero\" src=\"{}\"/>", &image),
+                (Some(image), ImagePlacement::Bottom) => format!("\n<image src=\"{}\"/>", &image),
+                (None, _) => String::new()
             },
             match &self.actions {
                 Some(actions) => actions
