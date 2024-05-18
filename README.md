@@ -37,11 +37,12 @@ fn main() {
                 arguments: String::from("https://www.google.com/"),
             }
         ])
-        .set_audio(Audio::LoopingAlarm1, Loop::True)        //   .set_audio_source("https://nyanpass.com/nyanpass.mp3")
+        // .set_audio(Audio::LoopingAlarm1, Loop::True)        
+        // .set_audio_source("https://nyanpass.com/nyanpass.mp3")
         .show()
 }
 ```
-![toast_notif](https://github.com/iKineticate/win-toast-notif-rs/assets/115683118/e3d1ae45-d87f-46ad-818c-f83cb1ef0bf8)
+![yijianmei](https://github.com/iKineticate/win-toast-notif-rs/assets/115683118/2d0c7908-3fd1-445a-8f27-7fbb4feefd0e)
 
 
 ## 免责声明
