@@ -12,32 +12,37 @@
 
 这个仓库中的代码可能并不适合用于生产环境，仅供学习和参考。如果你想要在自己的 Rust 项目中添加吐司通知功能，建议你查阅更为成熟和稳定的库，并仔细阅读相关文档。
 
-将win_toast_notif.rs放至src目录中使用
+将win_toast_notif.rs添加至src目录中
 ```rust
 use win_toast_notif::*;
 mod win_toast_notif;
 
 fn main() {
     WinToastNotif::new()
-      .set_logo(r"C:\Windows\IdentityCRL\WLive48x48.png", LogoCropCircle::True)
-      .set_title("Here's the title.")
-      .set_messages(vec!["Hellow", "World"])
-      .set_actions(vec![
-          Action {
-            activation_type: ActivationType::Protocol,
-            action_content: String::from("Open File"),
-            arguments: String::from(r"C:\Windows\Web\Screen\img100.jpg"),
-          },
-          Action {
-            activation_type: ActivationType::Protocol,
-            action_content: String::from("Open Url"),
-            arguments: String::from("https://www.google.com/"),
-          }
-      ])
-      .show()
+        .set_notif_open("https://www.google.com/")
+        .set_duration(Duration::Long)
+        .set_title("Here's the title.")
+        .set_messages(vec!["Hellow", "World"])
+        .set_logo(r"C:\Windows\IdentityCRL\WLive48x48.png", LogoCropCircle::True)
+        .set_image(r"C:\Windows\Web\Screen\img100.jpg", ImagePlacement::Top)
+        .set_actions(vec![
+            Action {
+                activation_type: ActivationType::Protocol,
+                action_content: String::from("Open File"),
+                arguments: String::from(r"C:\Windows\Web\Screen\img100.jpg"),
+            },
+            Action {
+                activation_type: ActivationType::Protocol,
+                action_content: String::from("Open Url"),
+                arguments: String::from("https://www.google.com/"),
+            }
+        ])
+        .set_audio(Audio::LoopingAlarm1, Loop::True)        //   .set_audio_source("https://nyanpass.com/nyanpass.mp3")
+        .show()
 }
 ```
-![notif_screen](https://github.com/iKineticate/win-toast-notif-rs/assets/115683118/4a35bb13-5f18-4422-8bad-729d15756ecb)
+![toast_notif](https://github.com/iKineticate/win-toast-notif-rs/assets/115683118/e3d1ae45-d87f-46ad-818c-f83cb1ef0bf8)
+
 
 ## 免责声明
 
