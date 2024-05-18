@@ -43,6 +43,16 @@ impl WinToastNotif {
       self
     }
 
+    pub fn set_duration(mut self, duration: Duration) -> Self {
+        self.duration = duration;
+        self
+    }
+    
+    pub fn set_notif_open(mut self, url: &str) -> Self {
+        self.notif_open = Some(url.into());
+        self
+    }
+
     pub fn set_title(mut self, title: &str) -> Self {
       self.title = Some(title.into());
       self
@@ -62,11 +72,6 @@ impl WinToastNotif {
     pub fn set_image(mut self, path: &str, position: ImagePlacement) -> Self {
         self.image = Some(path.into());
         self.image_placement = position;
-        self
-    }
-
-    pub fn set_notif_open(mut self, url: &str) -> Self {
-        self.notif_open = Some(url.into());
         self
     }
 
@@ -105,7 +110,7 @@ impl WinToastNotif {
                 </actions>
                 {}
             </toast>
-            "#，
+            "#,
             match &self.notif_open {
                 Some(url) => format!(r#" activationType="protocol" launch="{}""#, url),
                 None => String::new()
@@ -152,7 +157,7 @@ impl WinToastNotif {
                     .map(|action| format!(
                         r#"
                         <action content="{}" activationType="{}" arguments="{}" />
-                        "#，
+                        "#,
                         action.action_content,
                         action.activation_type.as_str(),
                         action.arguments
@@ -195,9 +200,16 @@ impl WinToastNotif {
         // Run it by PowerShell
         Command::new("powershell")
             .creation_flags(0x08000000)
-            。args(&["-Command", &command])
+            .args(&["-Command", &command])
             .output()
             .expect("Failed to execute command");
+
+        // println!("{}", command
+        //     .lines()
+        //     .map(|line| line.trim_start())
+        //     .filter(|&line| !line.is_empty())
+        //     .collect::<Vec<&str>>()
+        //     .join("\n"));
     }
 }
 
@@ -215,26 +227,18 @@ pub struct Action {
 }
 
 pub enum ActivationType {
-    Protocol,
+    Protocol,     // 使用协议激活功能启动不同的应用程序
     System,
-    Background,
-    Foreground,
+    Background,   // 触发相应的后台任务，而不会中断用户
+    Foreground,   // 启动前台应用程序（默认值）
 }
 
 impl ActivationType {
     pub fn as_str(&self) -> &'static str {
         match self {
-        // Your foreground app is launched(Default)
-        // 启动前台应用程序（默认）
         ActivationType::Foreground => "foreground",
-        // Your corresponding background task (assuming you set everything up) is triggered, and you can execute code in the background (like sending the user's quick reply message) without interrupting the user.
-        // 触发相应的后台任务，而不会中断用户
         ActivationType::Background => "background",
-        // Launch a different app using protocol activation.
-        // 使用协议激活功能启动不同的应用程序
         ActivationType::Protocol => "protocol",
-        //
-        //
         ActivationType::System => "system",
         }
     }
@@ -318,3 +322,28 @@ pub enum Loop {
     True,
     False
 }
+
+// For Example
+// fn main() {
+//     WinToastNotif::new()
+//         .set_notif_open("https://www.google.com/")
+//         .set_duration(Duration::Long)
+//         .set_title("Here's the title.")
+//         .set_messages(vec!["Hellow", "World"])
+//         .set_logo(r"C:\Windows\IdentityCRL\WLive48x48.png", LogoCropCircle::True)
+//         .set_image(r"C:\Windows\Web\Screen\img102.jpg", ImagePlacement::Top)
+//         .set_actions(vec![
+//             Action {
+//                 activation_type: ActivationType::Protocol,
+//                 action_content: String::from("Open File"),
+//                 arguments: String::from(r"C:\Windows\Web\Screen\img100.jpg"),
+//             },
+//             Action {
+//                 activation_type: ActivationType::Protocol,
+//                 action_content: String::from("Open Url"),
+//                 arguments: String::from("https://www.google.com/"),
+//             }
+//         ])
+//         .set_audio(Audio::LoopingAlarm1, Loop::True)    // .set_audio_source(r"C:\Program Files\Microsoft Office\root\Office16\sdxs\FA000000084\fluidhost\static\media\wl_completion_sound.13a69e47a3545eb5ac81.mp3")
+//         .show()
+// }
