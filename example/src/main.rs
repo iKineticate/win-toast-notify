@@ -4,8 +4,8 @@ mod win_toast_notif;
 
 fn main() {
     WinToastNotif::new()
-        .set_app_id(" ")    // 默认是PowerShell，若需要其他名称，终端输入"Get-StartApps"，获取其他App Id
-        .set_notif_open("https://en.wikipedia.org/wiki/Li_Qingzhao")
+        .set_app_id(" Your App Name ")    // 默认PowerShell，若需其他App Id，终端输入"Get-StartApps"获取
+        .set_notif_open("https://en.wikipedia.org/wiki/Li_Qingzhao")    // 点击通知的打开链接或文件(夹)
         .set_duration(Duration::Long)
         .set_title("《一剪梅·红藕香残玉簟秋》 宋·李清照")
         .set_messages(vec![
@@ -26,6 +26,6 @@ fn main() {
             }
         ])
         // .set_audio(Audio::WinLoopingAlarm1, Loop::True)
-        // .set_audio(Audio::From(r"C:\Windows\Media\Ring05.wav"), Loop::True)  
+        // .set_audio(Audio::From(r"C:\Windows\Media\Ring05.wav"), Loop::True)
         .show()
 }
