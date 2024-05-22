@@ -31,7 +31,7 @@ impl WinToastNotif {
             image: None,
             image_placement: ImagePlacement::Top,
             actions: None,
-            audio: None,
+            audio: Some(Audio::WinDefault),
             audio_loop: Loop::False,
         }
     }
@@ -112,7 +112,7 @@ impl WinToastNotif {
             match &self.duration {
                 Duration::Short => "",
                 Duration::Long => r#" duration="long""#,
-                Duration::TimeOut => r#"scenario="incomingCall""#
+                Duration::TimeOut => r#" scenario="incomingCall""#
             },
             match (&self.logo, &self.logo_circle) {
                 (Some(logo), CropCircle::True) => format!("\n<image placement=\"appLogoOverride\" hint-crop=\"circle\" src=\"{}\"/>", &logo),
@@ -180,7 +180,7 @@ impl WinToastNotif {
                 $MediaPlayer.Play()
                 "#, path_or_url
             ).unwrap(),
-            _ => println!("audio is not from source")
+            _ => ()
         }
         // Run it by PowerShell
         Command::new("powershell")
@@ -229,7 +229,7 @@ impl ActivationType {
     }
 }
 
-// 圆形Logo
+// 圆形剪切
 pub enum CropCircle {
     True,
     False
@@ -241,7 +241,7 @@ pub enum ImagePlacement {
     Bottom
 }
 
-// 音频
+// 系统音频
 pub enum Audio {
     From(&'static str),
     WinDefault,

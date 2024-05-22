@@ -19,8 +19,8 @@ mod win_toast_notif;
 
 fn main() {
     WinToastNotif::new()
-        .set_app_id(" Your App Name ")    // 默认PowerShell，若需其他App Id，终端输入"Get-StartApps"获取
-        .set_notif_open("https://en.wikipedia.org/wiki/Li_Qingzhao")    // 点击通知的打开链接或文件(夹)
+        .set_app_id("WindSend-S-Rust")    // 默认PowerShell，若需其他App Id，终端输入"Get-StartApps"获取
+        .set_notif_open("")    // 点击通知的打开链接或文件(夹)
         .set_duration(Duration::Long)
         .set_title("《一剪梅·红藕香残玉簟秋》 宋·李清照")
         .set_messages(vec![
@@ -40,13 +40,19 @@ fn main() {
                 arguments: "https://baike.baidu.com/item/%E4%B8%80%E5%89%AA%E6%A2%85%C2%B7%E7%BA%A2%E8%97%95%E9%A6%99%E6%AE%8B%E7%8E%89%E7%B0%9F%E7%A7%8B/593597#4",
             }
         ])
-        // .set_audio(Audio::WinLoopingAlarm1, Loop::True)
-        // .set_audio(Audio::From(r"C:\Windows\Media\Ring05.wav"), Loop::True) 
+        .set_audio(Audio::WinLoopingAlarm1, Loop::False)
+        // .set_audio(Audio::From(r"C:\Windows\Media\Ring05.wav"), Loop::True)
         .show()
 }
 ```
 
 ![yijianmei_screen](https://github.com/iKineticate/win-toast-notif-rs/assets/115683118/64c01312-9507-4423-8e43-cd3be37d8e8d)
+
+## 不明原因引起的问题
+
+1.无法播放除系统音频以外的资源
+
+2.不使用fn set_notif_open()无法发送通知
 
 ## 免责声明
 

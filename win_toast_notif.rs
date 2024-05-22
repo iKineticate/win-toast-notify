@@ -1,4 +1,3 @@
-#![windows_subsystem = "windows"] 
 #![allow(dead_code)]
 use std::process::Command;
 use std::os::windows::process::CommandExt;
@@ -11,13 +10,12 @@ pub struct WinToastNotif {
     pub title: Option<String>,
     pub messages: Option<Vec<String>>,
     pub logo: Option<String>,
-    pub logo_circle: LogoCropCircle,
+    pub logo_circle: CropCircle,
     pub image: Option<String>,
     pub image_placement: ImagePlacement,
     pub actions: Option<Vec<Action>>,
     pub audio: Option<Audio>,
     pub audio_loop: Loop,
-    pub audio_source: Option<String>,
 }
 
 impl WinToastNotif {
@@ -29,13 +27,12 @@ impl WinToastNotif {
             title: None,
             messages: Some(vec![String::from("Hellow World")]),
             logo: None,
-            logo_circle: LogoCropCircle::False,
+            logo_circle: CropCircle::False,
             image: None,
             image_placement: ImagePlacement::Top,
             actions: None,
-            audio: None,
+            audio: Some(Audio::WinDefault),
             audio_loop: Loop::False,
-            audio_source: None,
         }
     }
   
@@ -50,7 +47,7 @@ impl WinToastNotif {
     }
     
     pub fn set_notif_open(mut self, url: &str) -> Self {
-        self.notif_open = Some(url.into());
+        self.notif_open = Some(url.trim().into());
         self
     }
 
@@ -64,14 +61,14 @@ impl WinToastNotif {
         self
     }
 
-    pub fn set_logo(mut self, path: &str, hint_crop: LogoCropCircle) -> Self {
-        self.logo = Some(path.into());
+    pub fn set_logo(mut self, path: &str, hint_crop: CropCircle) -> Self {
+        self.logo = Some(path.trim().into());
         self.logo_circle = hint_crop;
         self
     }
 
     pub fn set_image(mut self, path: &str, position: ImagePlacement) -> Self {
-        self.image = Some(path.into());
+        self.image = Some(path.trim().into());
         self.image_placement = position;
         self
     }
@@ -86,18 +83,12 @@ impl WinToastNotif {
         self.audio_loop = audio_loop;
         self
     }
-  
-    pub fn set_audio_source(mut self, url: &str) -> Self {
-        self.audio_source = Some(url.into());
-        self
-    }
 
     pub fn show(&self) {
         // Create a String instance and preallocate 2000 bytes of memory for it, reduce the number of memory reallocations
         let mut command = String::with_capacity(2000);
         // Start of XML
         command.push_str("$xml = @\"");
-        // <visual>
         write!(command, r#"
             <toast{}{}>
                 <visual>
@@ -121,11 +112,11 @@ impl WinToastNotif {
             match &self.duration {
                 Duration::Short => "",
                 Duration::Long => r#" duration="long""#,
-                Duration::TimeOut => r#"scenario="incomingCall""#
+                Duration::TimeOut => r#" scenario="incomingCall""#
             },
-            match (&self.logo, self.logo_circle) {
-                (Some(logo), LogoCropCircle::True) => format!("\n<image placement=\"appLogoOverride\" hint-crop=\"circle\" src=\"{}\"/>", &logo),
-                (Some(logo), LogoCropCircle::False) => format!("\n<image placement=\"appLogoOverride\" src=\"{}\"/>", &logo),
+            match (&self.logo, &self.logo_circle) {
+                (Some(logo), CropCircle::True) => format!("\n<image placement=\"appLogoOverride\" hint-crop=\"circle\" src=\"{}\"/>", &logo),
+                (Some(logo), CropCircle::False) => format!("\n<image placement=\"appLogoOverride\" src=\"{}\"/>", &logo),
                 (None, _) => String::new()
             },
             match &self.title {
@@ -139,7 +130,7 @@ impl WinToastNotif {
                     .collect::<String>(),
                 None => String::new()
             },
-            match (&self.image, self.image_placement){
+            match (&self.image, &self.image_placement){
                 (Some(image), ImagePlacement::Top) => format!("\n<image placement=\"hero\" src=\"{}\"/>", &image),
                 (Some(image), ImagePlacement::Bottom) => format!("\n<image src=\"{}\"/>", &image),
                 (None, _) => String::new()
@@ -147,22 +138,23 @@ impl WinToastNotif {
             match &self.actions {
                 Some(actions) => actions
                     .iter()
-                    .map(|action| format!(
-                        r#"
-                        <action content="{}" activationType="{}" arguments="{}" />
-                        "#,
+                    .map(|action| {
+                        format!("\n<action content=\"{}\" activationType=\"{}\" arguments=\"{}\" />",
                         action.action_content,
                         action.activation_type.as_str(),
                         action.arguments
-                        ))
+                        )
+                    })
                     .collect::<String>(),
                 None => String::new()
             },
-            match (&self.audio, &self.audio_loop, &self.audio_source) {
-                (Some(audio), Loop::True, None) => format!("\n<audio src=\"{}\" loop=\"true\" />", audio.as_str()),
-                (Some(audio), Loop::False, None) => format!("\n<audio src=\"{}\" />", audio.as_str()),
-                (_, _, Some(_)) => String::from("\n<audio silent=\"true\" />"),
-                (None, _, _) => String::from("\n<audio silent=\"true\" />")               
+            match &self.audio {
+                Some(audio) => match (audio, &self.audio_loop) {
+                        (Audio::From(_), _) => String::from("\n<audio silent=\"true\" />"),
+                        (_, Loop::False) => format!("\n<audio src=\"{}\" />", audio.as_str()),
+                        (_, Loop::True) => format!("\n<audio src=\"{}\" loop=\"true\" />", audio.as_str())
+                },
+                None => String::from("\n<audio silent=\"true\" />")
             }
         ).unwrap();
         // End of XML: 终止符("@)前面不能有空格
@@ -180,15 +172,15 @@ impl WinToastNotif {
             }
         ).unwrap();
         // Audio Source
-        match &self.audio_source {
-            Some(url) => write!(command,
-                    r#"
-                    $MediaPlayer = [Windows.Media.Playback.MediaPlayer, Windows.Media, ContentType = WindowsRuntime]::New()
-                    $MediaPlayer.Source = [Windows.Media.Core.MediaSource]::CreateFromUri('{}')
-                    $MediaPlayer.Play()
-                    "#, &url
-                ).unwrap(),
-            None => ()
+        match &self.audio {
+            Some(Audio::From(path_or_url)) => write!(command,
+                r#"
+                $MediaPlayer = [Windows.Media.Playback.MediaPlayer, Windows.Media, ContentType = WindowsRuntime]::New()
+                $MediaPlayer.Source = [Windows.Media.Core.MediaSource]::CreateFromUri('{}')
+                $MediaPlayer.Play()
+                "#, path_or_url
+            ).unwrap(),
+            _ => ()
         }
         // Run it by PowerShell
         Command::new("powershell")
@@ -215,8 +207,8 @@ pub enum Duration {
 
 pub struct Action {
     pub activation_type: ActivationType,
-    pub action_content: String,
-    pub arguments: String,
+    pub action_content: &'static str,
+    pub arguments: &'static str,
 }
 
 pub enum ActivationType {
@@ -229,16 +221,16 @@ pub enum ActivationType {
 impl ActivationType {
     pub fn as_str(&self) -> &'static str {
         match self {
-        ActivationType::Foreground => "foreground",
-        ActivationType::Background => "background",
-        ActivationType::Protocol => "protocol",
-        ActivationType::System => "system",
+            ActivationType::Foreground => "foreground",
+            ActivationType::Background => "background",
+            ActivationType::Protocol => "protocol",
+            ActivationType::System => "system",
         }
     }
 }
 
-// 圆形Logo
-pub enum LogoCropCircle {
+// 圆形剪切
+pub enum CropCircle {
     True,
     False
 }
@@ -249,63 +241,65 @@ pub enum ImagePlacement {
     Bottom
 }
 
-// 音频
+// 系统音频
 pub enum Audio {
-    Default,
-    IM,
-    Mail,
-    Remainder,
-    SMS,
-    LoopingAlarm1,
-    LoopingAlarm2,
-    LoopingAlarm3,
-    LoopingAlarm4,
-    LoopingAlarm5,
-    LoopingAlarm6,
-    LoopingAlarm7,
-    LoopingAlarm8,
-    LoopingAlarm9,
-    LoopingAlarm10,
-    LoopingCall1,
-    LoopingCall2,
-    LoopingCall3,
-    LoopingCall4,
-    LoopingCall5,
-    LoopingCall6,
-    LoopingCall7,
-    LoopingCall8,
-    LoopingCall9,
-    LoopingCall10,
+    From(&'static str),
+    WinDefault,
+    WinIM,
+    WinMail,
+    WinRemainder,
+    WinSMS,
+    WinLoopingAlarm1,
+    WinLoopingAlarm2,
+    WinLoopingAlarm3,
+    WinLoopingAlarm4,
+    WinLoopingAlarm5,
+    WinLoopingAlarm6,
+    WinLoopingAlarm7,
+    WinLoopingAlarm8,
+    WinLoopingAlarm9,
+    WinLoopingAlarm10,
+    WinLoopingCall1,
+    WinLoopingCall2,
+    WinLoopingCall3,
+    WinLoopingCall4,
+    WinLoopingCall5,
+    WinLoopingCall6,
+    WinLoopingCall7,
+    WinLoopingCall8,
+    WinLoopingCall9,
+    WinLoopingCall10,
 }
 
 impl Audio {
     pub fn as_str(&self) -> &'static str {
         match self {
-            Audio::Default => "ms-winsoundevent:Notification.Default",
-            Audio::IM => "ms-winsoundevent:Notification.IM",
-            Audio::Mail => "ms-winsoundevent:Notification.Mail",
-            Audio::Remainder => "ms-winsoundevent:Notification.Remainder",
-            Audio::SMS => "ms-winsoundevent:Notification.SMS",
-            Audio::LoopingAlarm1 => "ms-winsoundevent:Notification.Looping.Alarm",
-            Audio::LoopingAlarm2 => "ms-winsoundevent:Notification.Looping.Alarm2",
-            Audio::LoopingAlarm3 => "ms-winsoundevent:Notification.Looping.Alarm3",
-            Audio::LoopingAlarm4 => "ms-winsoundevent:Notification.Looping.Alarm4",
-            Audio::LoopingAlarm5 => "ms-winsoundevent:Notification.Looping.Alarm5",
-            Audio::LoopingAlarm6 => "ms-winsoundevent:Notification.Looping.Alarm6",
-            Audio::LoopingAlarm7 => "ms-winsoundevent:Notification.Looping.Alarm7",
-            Audio::LoopingAlarm8 => "ms-winsoundevent:Notification.Looping.Alarm8",
-            Audio::LoopingAlarm9 => "ms-winsoundevent:Notification.Looping.Alarm9",
-            Audio::LoopingAlarm10 => "ms-winsoundevent:Notification.Looping.Alarm10",
-            Audio::LoopingCall1 => "ms-winsoundevent:Notification.Looping.Call",
-            Audio::LoopingCall2 => "ms-winsoundevent:Notification.Looping.Call2",
-            Audio::LoopingCall3 => "ms-winsoundevent:Notification.Looping.Call3",
-            Audio::LoopingCall4 => "ms-winsoundevent:Notification.Looping.Call4",
-            Audio::LoopingCall5 => "ms-winsoundevent:Notification.Looping.Call5",
-            Audio::LoopingCall6 => "ms-winsoundevent:Notification.Looping.Call6",
-            Audio::LoopingCall7 => "ms-winsoundevent:Notification.Looping.Call7",
-            Audio::LoopingCall8 => "ms-winsoundevent:Notification.Looping.Call8",
-            Audio::LoopingCall9 => "ms-winsoundevent:Notification.Looping.Call9",
-            Audio::LoopingCall10 => "ms-winsoundevent:Notification.Looping.Call10",
+            Audio::From(path_or_url) => path_or_url,
+            Audio::WinDefault => "ms-winsoundevent:Notification.Default",
+            Audio::WinIM => "ms-winsoundevent:Notification.IM",
+            Audio::WinMail => "ms-winsoundevent:Notification.Mail",
+            Audio::WinRemainder => "ms-winsoundevent:Notification.Remainder",
+            Audio::WinSMS => "ms-winsoundevent:Notification.SMS",
+            Audio::WinLoopingAlarm1 => "ms-winsoundevent:Notification.Looping.Alarm",
+            Audio::WinLoopingAlarm2 => "ms-winsoundevent:Notification.Looping.Alarm2",
+            Audio::WinLoopingAlarm3 => "ms-winsoundevent:Notification.Looping.Alarm3",
+            Audio::WinLoopingAlarm4 => "ms-winsoundevent:Notification.Looping.Alarm4",
+            Audio::WinLoopingAlarm5 => "ms-winsoundevent:Notification.Looping.Alarm5",
+            Audio::WinLoopingAlarm6 => "ms-winsoundevent:Notification.Looping.Alarm6",
+            Audio::WinLoopingAlarm7 => "ms-winsoundevent:Notification.Looping.Alarm7",
+            Audio::WinLoopingAlarm8 => "ms-winsoundevent:Notification.Looping.Alarm8",
+            Audio::WinLoopingAlarm9 => "ms-winsoundevent:Notification.Looping.Alarm9",
+            Audio::WinLoopingAlarm10 => "ms-winsoundevent:Notification.Looping.Alarm10",
+            Audio::WinLoopingCall1 => "ms-winsoundevent:Notification.Looping.Call",
+            Audio::WinLoopingCall2 => "ms-winsoundevent:Notification.Looping.Call2",
+            Audio::WinLoopingCall3 => "ms-winsoundevent:Notification.Looping.Call3",
+            Audio::WinLoopingCall4 => "ms-winsoundevent:Notification.Looping.Call4",
+            Audio::WinLoopingCall5 => "ms-winsoundevent:Notification.Looping.Call5",
+            Audio::WinLoopingCall6 => "ms-winsoundevent:Notification.Looping.Call6",
+            Audio::WinLoopingCall7 => "ms-winsoundevent:Notification.Looping.Call7",
+            Audio::WinLoopingCall8 => "ms-winsoundevent:Notification.Looping.Call8",
+            Audio::WinLoopingCall9 => "ms-winsoundevent:Notification.Looping.Call9",
+            Audio::WinLoopingCall10 => "ms-winsoundevent:Notification.Looping.Call10",
         }
     }
 }
