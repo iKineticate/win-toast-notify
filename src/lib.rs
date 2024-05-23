@@ -18,6 +18,12 @@ pub struct WinToastNotif {
     pub audio_loop: Loop,
 }
 
+impl Default for WinToastNotif {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl WinToastNotif {
     pub fn new() -> Self {
         Self {
@@ -130,10 +136,9 @@ impl WinToastNotif {
                 None => String::new(),
             },
             match &self.messages {
-                Some(messages) => messages
-                    .iter()
-                    .map(|message| format!("\n<text>{}</text>", message))
-                    .collect::<String>(),
+                Some(messages) => messages.iter().fold(String::new(), |acc, message| {
+                    format!("{}\n<text>{}</text>", acc, message)
+                }),
                 None => String::new(),
             },
             match (&self.image, &self.image_placement) {
@@ -143,17 +148,26 @@ impl WinToastNotif {
                 (None, _) => String::new(),
             },
             match &self.actions {
-                Some(actions) => actions
-                    .iter()
-                    .map(|action| {
-                        format!(
-                            "\n<action content=\"{}\" activationType=\"{}\" arguments=\"{}\" />",
-                            action.action_content,
-                            action.activation_type.as_str(),
-                            action.arguments
-                        )
-                    })
-                    .collect::<String>(),
+                // Some(actions) => actions
+                //     .iter()
+                //     .map(|action| {
+                //         format!(
+                //             "\n<action content=\"{}\" activationType=\"{}\" arguments=\"{}\" />",
+                //             action.action_content,
+                //             action.activation_type.as_str(),
+                //             action.arguments
+                //         )
+                //     })
+                //     .collect::<String>(),
+                Some(actions) => actions.iter().fold(String::new(), |acc, action| {
+                    format!(
+                        "{}\n<action content=\"{}\" activationType=\"{}\" arguments=\"{}\" />",
+                        acc,
+                        action.action_content,
+                        action.activation_type.as_str(),
+                        action.arguments
+                    )
+                }),
                 None => String::new(),
             },
             match &self.audio {
@@ -181,21 +195,20 @@ impl WinToastNotif {
                 None => r"{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe"
             }
         ).unwrap();
-        // Audio Source
-        match &self.audio {
-            Some(Audio::From(path_or_url)) => write!(command,
-                r#"
-                $MediaPlayer = [Windows.Media.Playback.MediaPlayer, Windows.Media, ContentType = WindowsRuntime]::New()
-                $MediaPlayer.Source = [Windows.Media.Core.MediaSource]::CreateFromUri('{}')
-                $MediaPlayer.Play()
-                "#, path_or_url
-            ).unwrap(),
-            _ => ()
+
+        if let Some(Audio::From(path_or_url)) = &self.audio {
+            write!(command,
+                     r#"
+                     $MediaPlayer = [Windows.Media.Playback.MediaPlayer, Windows.Media, ContentType = WindowsRuntime]::New()
+                     $MediaPlayer.Source = [Windows.Media.Core.MediaSource]::CreateFromUri('{}')
+                     $MediaPlayer.Play()
+                     "#, path_or_url
+                 ).unwrap()
         }
         // Run it by PowerShell
         Command::new("powershell")
             .creation_flags(0x08000000)
-            .args(&["-Command", &command])
+            .args(["-Command", &command])
             .output()
             .expect("Failed to execute command");
 
