@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-use std::process::Command;
-use std::os::windows::process::CommandExt;
 use std::fmt::Write;
+use std::os::windows::process::CommandExt;
+use std::process::Command;
 
 pub struct WinToastNotif {
     pub app_id: Option<String>,
@@ -35,7 +35,7 @@ impl WinToastNotif {
             audio_loop: Loop::False,
         }
     }
-  
+
     pub fn set_app_id(mut self, id: &str) -> Self {
         self.app_id = Some(id.into());
         self
@@ -45,7 +45,7 @@ impl WinToastNotif {
         self.duration = duration;
         self
     }
-    
+
     pub fn set_notif_open(mut self, url: &str) -> Self {
         self.notif_open = Some(url.trim().into());
         self
@@ -89,7 +89,9 @@ impl WinToastNotif {
         let mut command = String::with_capacity(2000);
         // Start of XML
         command.push_str("$xml = @\"");
-        write!(command, r#"
+        write!(
+            command,
+            r#"
             <toast{}{}>
                 <visual>
                     <binding template="ToastGeneric">
@@ -107,56 +109,64 @@ impl WinToastNotif {
             "#,
             match &self.notif_open {
                 Some(url) => format!(r#" activationType="protocol" launch="{}""#, url),
-                None => String::new()
+                None => String::new(),
             },
             match &self.duration {
                 Duration::Short => "",
                 Duration::Long => r#" duration="long""#,
-                Duration::TimeOut => r#" scenario="incomingCall""#
+                Duration::TimeOut => r#" scenario="incomingCall""#,
             },
             match (&self.logo, &self.logo_circle) {
-                (Some(logo), CropCircle::True) => format!("\n<image placement=\"appLogoOverride\" hint-crop=\"circle\" src=\"{}\"/>", &logo),
-                (Some(logo), CropCircle::False) => format!("\n<image placement=\"appLogoOverride\" src=\"{}\"/>", &logo),
-                (None, _) => String::new()
+                (Some(logo), CropCircle::True) => format!(
+                    "\n<image placement=\"appLogoOverride\" hint-crop=\"circle\" src=\"{}\"/>",
+                    &logo
+                ),
+                (Some(logo), CropCircle::False) =>
+                    format!("\n<image placement=\"appLogoOverride\" src=\"{}\"/>", &logo),
+                (None, _) => String::new(),
             },
             match &self.title {
                 Some(title) => format!("\n<text>{}</text>", &title),
-                None => String::new()
+                None => String::new(),
             },
             match &self.messages {
                 Some(messages) => messages
                     .iter()
                     .map(|message| format!("\n<text>{}</text>", message))
                     .collect::<String>(),
-                None => String::new()
+                None => String::new(),
             },
-            match (&self.image, &self.image_placement){
-                (Some(image), ImagePlacement::Top) => format!("\n<image placement=\"hero\" src=\"{}\"/>", &image),
+            match (&self.image, &self.image_placement) {
+                (Some(image), ImagePlacement::Top) =>
+                    format!("\n<image placement=\"hero\" src=\"{}\"/>", &image),
                 (Some(image), ImagePlacement::Bottom) => format!("\n<image src=\"{}\"/>", &image),
-                (None, _) => String::new()
+                (None, _) => String::new(),
             },
             match &self.actions {
                 Some(actions) => actions
                     .iter()
                     .map(|action| {
-                        format!("\n<action content=\"{}\" activationType=\"{}\" arguments=\"{}\" />",
-                        action.action_content,
-                        action.activation_type.as_str(),
-                        action.arguments
+                        format!(
+                            "\n<action content=\"{}\" activationType=\"{}\" arguments=\"{}\" />",
+                            action.action_content,
+                            action.activation_type.as_str(),
+                            action.arguments
                         )
                     })
                     .collect::<String>(),
-                None => String::new()
+                None => String::new(),
             },
             match &self.audio {
                 Some(audio) => match (audio, &self.audio_loop) {
-                        (Audio::From(_), _) => String::from("\n<audio silent=\"true\" />"),
-                        (_, Loop::False) => format!("\n<audio src=\"{}\" />", audio.as_str()),
-                        (_, Loop::True) => format!("\n<audio src=\"{}\" loop=\"true\" />", audio.as_str())
+                    (Audio::From(_), _) => String::from("\n<audio silent=\"true\" />"),
+                    (_, Loop::False) => format!("\n<audio src=\"{}\" />", audio.as_str()),
+                    (_, Loop::True) =>
+                        format!("\n<audio src=\"{}\" loop=\"true\" />", audio.as_str()),
                 },
-                None => String::from("\n<audio silent=\"true\" />")
+                None => String::from("\n<audio silent=\"true\" />"),
             }
-        ).unwrap();
+        )
+        .unwrap();
         // End of XML: 终止符("@)前面不能有空格
         command.push_str("\n\"@");
         // Powershell: AppId
@@ -212,10 +222,10 @@ pub struct Action {
 }
 
 pub enum ActivationType {
-    Protocol,     // 使用协议激活功能启动不同的应用程序
+    Protocol, // 使用协议激活功能启动不同的应用程序
     System,
-    Background,   // 触发相应的后台任务，而不会中断用户
-    Foreground,   // 启动前台应用程序（默认值）
+    Background, // 触发相应的后台任务，而不会中断用户
+    Foreground, // 启动前台应用程序（默认值）
 }
 
 impl ActivationType {
@@ -232,13 +242,13 @@ impl ActivationType {
 // 圆形剪切
 pub enum CropCircle {
     True,
-    False
+    False,
 }
 
 // 图片位置
 pub enum ImagePlacement {
     Top,
-    Bottom
+    Bottom,
 }
 
 // 系统音频
@@ -307,5 +317,5 @@ impl Audio {
 // 音频循环
 pub enum Loop {
     True,
-    False
+    False,
 }
