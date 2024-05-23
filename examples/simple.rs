@@ -26,5 +26,5 @@ fn main() {
         ])
         .set_audio(Audio::WinLoopingAlarm1, Loop::True)
         // .set_audio(Audio::From(r"C:\Windows\Media\Ring05.wav"), Loop::False)
-        .show()
+        .show().expect("Failed to show toast notification")
 }

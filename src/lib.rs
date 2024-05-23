@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use std::fmt::Write;
 use std::os::windows::process::CommandExt;
 use std::process::Command;
@@ -90,7 +89,7 @@ impl WinToastNotif {
         self
     }
 
-    pub fn show(&self) {
+    pub fn show(&self) -> Result<(), Box<dyn std::error::Error>> {
         // Create a String instance and preallocate 2000 bytes of memory for it, reduce the number of memory reallocations
         let mut command = String::with_capacity(2000);
         // Start of XML
@@ -148,17 +147,6 @@ impl WinToastNotif {
                 (None, _) => String::new(),
             },
             match &self.actions {
-                // Some(actions) => actions
-                //     .iter()
-                //     .map(|action| {
-                //         format!(
-                //             "\n<action content=\"{}\" activationType=\"{}\" arguments=\"{}\" />",
-                //             action.action_content,
-                //             action.activation_type.as_str(),
-                //             action.arguments
-                //         )
-                //     })
-                //     .collect::<String>(),
                 Some(actions) => actions.iter().fold(String::new(), |acc, action| {
                     format!(
                         "{}\n<action content=\"{}\" activationType=\"{}\" arguments=\"{}\" />",
@@ -179,12 +167,13 @@ impl WinToastNotif {
                 },
                 None => String::from("\n<audio silent=\"true\" />"),
             }
-        )
-        .unwrap();
+        )?;
         // End of XML: 终止符("@)前面不能有空格
         command.push_str("\n\"@");
         // Powershell: AppId
-        write!(command, r#"
+        write!(
+            command,
+            r#"
             $XmlDocument = [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime]::New()
             $XmlDocument.loadXml($xml)
             $AppId = '{}'
@@ -192,25 +181,35 @@ impl WinToastNotif {
             "#,
             match &self.app_id {
                 Some(id) => id,
-                None => r"{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe"
+                None =>
+                    r"{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe",
             }
-        ).unwrap();
+        )?;
 
         if let Some(Audio::From(path_or_url)) = &self.audio {
-            write!(command,
-                     r#"
+            write!(
+                command,
+                r#"
                      $MediaPlayer = [Windows.Media.Playback.MediaPlayer, Windows.Media, ContentType = WindowsRuntime]::New()
                      $MediaPlayer.Source = [Windows.Media.Core.MediaSource]::CreateFromUri('{}')
                      $MediaPlayer.Play()
-                     "#, path_or_url
-                 ).unwrap()
+                     "#,
+                path_or_url
+            )?
         }
         // Run it by PowerShell
-        Command::new("powershell")
+        let output = Command::new("powershell")
             .creation_flags(0x08000000)
             .args(["-Command", &command])
             .output()
-            .expect("Failed to execute command");
+            .map_err(|e| format!("Failed to execute process: {}", e))?;
+        if !output.status.success() {
+            return Err(format!(
+                "Failed to execute command: {}",
+                String::from_utf8_lossy(&output.stderr)
+            )
+            .into());
+        }
 
         // println!("{}", command
         //     .lines()
@@ -218,6 +217,7 @@ impl WinToastNotif {
         //     .filter(|&line| !line.is_empty())
         //     .collect::<Vec<&str>>()
         //     .join("\n"));
+        Ok(())
     }
 }
 
