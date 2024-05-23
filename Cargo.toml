@@ -1,0 +1,14 @@
+[package]
+name = "win-toast-notif"
+version = "0.1.0"
+edition = "2021"
+authors = ["iKineticate"]
+keywords = ["notification", "windows", "toast", "notify"]
+readme = "README.md"
+description = "Windows Toast Notifications"
+repository = "https://github.com/iKineticate/win-toast-notif-rs"
+homepage = "https://github.com/iKineticate/win-toast-notif-rs"
+# documentation = ""
+# license = ""
+
+[dependencies]

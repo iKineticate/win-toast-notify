@@ -1,6 +1,5 @@
 #![windows_subsystem = "windows"]
 use win_toast_notif::*;
-mod win_toast_notif;
 
 fn main() {
     WinToastNotif::new()
