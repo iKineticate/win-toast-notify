@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "win-toast-notif"
+name = "win-toast-notify"
 version = "0.1.0"
