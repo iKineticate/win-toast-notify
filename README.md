@@ -6,6 +6,10 @@ This is a library for sending Windows Toast notifications, mainly referencing th
 - [wpush.rs](https://github.com/saez-juan/wpush.rs)
 - [toast-notification-examples](https://github.com/GitHub30/toast-notification-examples)
 
+Tested in Windows 11
+
+[0.1.1 Documentaton](https://docs.rs/win-toast-notify)
+
 ## Usage
 ```
 #Cargo.toml
