@@ -193,7 +193,7 @@ impl WinToastNotify {
     ///     .show()
     ///     .expect("Failed to show toast notification");
     /// 
-    /// // Use other audio, but don't loop it.
+    /// // Use other audio, but don't loop it.(Currently unable to play other audio sources for unknown reasons)
     /// WinToastNotify::new()
     ///     .set_audio(Audio::From(r"C:\Windows\Media\Ring05.wav"), Loop::False)
     ///     .show()
@@ -348,6 +348,7 @@ pub struct Action {
     pub image_url: Option<&'static str>,
 }
 
+/// [Microsoft Docs about Button](https://learn.microsoft.com/en-us/uwp/schemas/tiles/toastschema/element-action)
 pub enum ActivationType {
     Protocol, // 使用协议激活功能启动不同的应用程序
     System,
