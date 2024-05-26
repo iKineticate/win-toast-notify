@@ -51,7 +51,7 @@ fn main() {
 }
 ```
 
-![image](https://github.com/iKineticate/win-toast-notify/examples/images/example_zh.png)
+![image](https://raw.githubusercontent.com/iKineticate/win-toast-notify/main/examples/images/example_zh.png)
 
 ## 问题
 

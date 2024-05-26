@@ -1,4 +1,4 @@
-<h3 align="center"> English | <a href='./README-zh.md'>简体中文</a></h3>
+<h3 align="center"> English | <a href='./README_zh.md'>简体中文</a></h3>
 
 # win-toast-notiy
 This is a library for sending Windows Toast notifications, mainly referencing the following two projects:
@@ -49,7 +49,7 @@ fn main() {
 }
 ```
 
-![image](https://github.com/iKineticate/win-toast-notify/examples/images/example_en.png)
+![image](https://raw.githubusercontent.com/iKineticate/win-toast-notify/main/examples/images/example_en.png)
 
 ## 问题
 
