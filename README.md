@@ -14,7 +14,7 @@ Tested in Windows 11
 ```
 #Cargo.toml
 [dependencies]
-win-toast-notify = "0.1.0"
+win-toast-notify = "0.1.1"
 ```
 
 ## Examples
