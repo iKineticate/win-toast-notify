@@ -12,7 +12,7 @@
 ```
 #Cargo.toml
 [dependencies]
-win-toast-notify = "0.1.0"
+win-toast-notify = "0.1.1"
 ```
 
 ## 例子
