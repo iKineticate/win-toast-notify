@@ -7,13 +7,13 @@
 
 该库在Windows 11中测试
 
-[0.1.2 Documentaton](https://docs.rs/win-toast-notify)
+[0.1.3 Documentaton](https://docs.rs/win-toast-notify)
 
 ## 使用
 ```
 #Cargo.toml
 [dependencies]
-win-toast-notify = "0.1.2"
+win-toast-notify = "0.1.3"
 ```
 
 ## 例子

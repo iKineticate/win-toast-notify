@@ -8,13 +8,13 @@ This is a library for sending Windows Toast notifications, mainly referencing th
 
 Tested in Windows 11
 
-[0.1.2 Documentaton](https://docs.rs/win-toast-notify)
+[0.1.3 Documentaton](https://docs.rs/win-toast-notify)
 
 ## Usage
 ```
 #Cargo.toml
 [dependencies]
-win-toast-notify = "0.1.2"
+win-toast-notify = "0.1.3"
 ```
 
 ## Examples
