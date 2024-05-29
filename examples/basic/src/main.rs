@@ -10,7 +10,7 @@ fn main() {
             "红藕香残玉簟秋。轻解罗裳，独上兰舟。\n云中谁寄锦书来，雁字回时，月满西楼。",
             "花自飘零水自流。一种相思，两处闲愁。\n此情无计可消除，才下眉头，却上心头。"
         ])
-        .set_logo(r"C:\Users\11593\Documents\GitHub\win-toast-notify\examples\basic\src\Li Qingzhao.jpeg", CropCircle::True)
+        .set_logo(r"C:\Users\11593\Documents\GitHub\win-toast-notify\examples\basic\src\LiQingZhao.jpeg", CropCircle::True)
         .set_image(r"C:\Users\11593\Documents\GitHub\win-toast-notify\examples\basic\src\yijianmei.jpg", ImagePlacement::Top)
         .set_actions(vec![
             Action {

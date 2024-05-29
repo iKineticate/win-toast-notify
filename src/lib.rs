@@ -1,6 +1,7 @@
 use std::fmt::Write;
 use std::os::windows::process::CommandExt;
 use std::process::Command;
+use xml::escape::escape_str_attribute;
 
 pub struct WinToastNotify {
     pub app_id: Option<String>,
@@ -80,7 +81,7 @@ impl WinToastNotify {
     /// 
     /// - Name: `IconUrl`, Value: Path to your APP icon
     pub fn set_app_id(mut self, id: &str) -> Self {
-        self.app_id = Some(id.into());
+        self.app_id = Some(escape_str_attribute(id).into_owned());
         self
     }
 
@@ -101,13 +102,13 @@ impl WinToastNotify {
     ///     .expect("Failed to show toast notification");
     /// ```
     pub fn set_notif_open(mut self, url_or_path: &str) -> Self {
-        self.notif_open = Some(url_or_path.trim().into());
+        self.notif_open = Some(escape_str_attribute(url_or_path.trim()).into_owned());
         self
     }
 
     /// Set the title of the notification.
     pub fn set_title(mut self, title: &str) -> Self {
-        self.title = Some(title.into());
+        self.title = Some(escape_str_attribute(title).into_owned());
         self
     }
 
@@ -128,20 +129,20 @@ impl WinToastNotify {
     ///     .expect("Failed to show toast notification");
     /// ```
     pub fn set_messages(mut self, messages: Vec<&str>) -> Self {
-        self.messages = Some(Box::new(messages.iter().map(|t| t.to_string())).collect());
+        self.messages = Some(Box::new(messages.iter().map(|t| escape_str_attribute(t).into_owned())).collect());
         self
     }
 
     /// Set the notification logo and specify whether to crop it into a circle.
     pub fn set_logo(mut self, path: &str, hint_crop: CropCircle) -> Self {
-        self.logo = Some(path.trim().into());
+        self.logo = Some(escape_str_attribute(path.trim()).into_owned());
         self.logo_circle = hint_crop;
         self
     }
 
     /// Set the notification image and its position.
     pub fn set_image(mut self, path: &str, position: ImagePlacement) -> Self {
-        self.image = Some(path.trim().into());
+        self.image = Some(escape_str_attribute(path.trim()).into_owned());
         self.image_placement = position;
         self
     }
@@ -194,10 +195,10 @@ impl WinToastNotify {
     ///     .expect("Failed to show toast notification");
     /// 
     /// // Use other audio, but don't loop it.(Currently unable to play other audio sources for unknown reasons)
-    /// WinToastNotify::new()
-    ///     .set_audio(Audio::From(r"C:\Windows\Media\Ring05.wav"), Loop::False)
-    ///     .show()
-    ///     .expect("Failed to show toast notification");
+    /// // WinToastNotify::new()
+    /// //    .set_audio(Audio::From(r"C:\Windows\Media\Ring05.wav"), Loop::False)
+    /// //    .show()
+    /// //    .expect("Failed to show toast notification");
     /// ```
     pub fn set_audio(mut self, audio: Audio, audio_loop: Loop) -> Self {
         self.audio = Some(audio);
@@ -230,7 +231,7 @@ impl WinToastNotify {
             </toast>
             "#,
             match &self.notif_open {
-                Some(url) => format!(r#" activationType="protocol" launch="{}""#, url),
+                Some(url_or_path) => format!(r#" activationType="protocol" launch="{}""#, url_or_path),
                 None => String::new(),
             },
             match &self.duration {
@@ -268,10 +269,10 @@ impl WinToastNotify {
                     format!(
                         "{}\n<action content=\"{}\" activationType=\"{}\" arguments=\"{}\" {} />",
                         acc,
-                        action.action_content,
+                        escape_str_attribute(action.action_content).into_owned(),
                         action.activation_type.as_str(),
-                        action.arguments,
-                        action.image_url.map_or(String::new(), |url| format!("imageUri=\"{}\"", url)),
+                        escape_str_attribute(action.arguments).into_owned(),
+                        action.image_url.map_or(String::new(), |url| format!("imageUri=\"{}\"", escape_str_attribute(url.trim()).into_owned())),
                     )
                 }),
                 None => String::new(),
@@ -313,7 +314,7 @@ impl WinToastNotify {
                 $MediaPlayer.Source = [Windows.Media.Core.MediaSource]::CreateFromUri('{}')
                 $MediaPlayer.Play()
                 "#,
-                url
+                escape_str_attribute(url.trim()).into_owned()
             )?
         }
         // Run it by PowerShell
