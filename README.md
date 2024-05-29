@@ -8,13 +8,13 @@ This is a library for sending Windows Toast notifications, mainly referencing th
 
 Tested in Windows 11
 
-[0.1.1 Documentaton](https://docs.rs/win-toast-notify)
+[0.1.2 Documentaton](https://docs.rs/win-toast-notify)
 
 ## Usage
 ```
 #Cargo.toml
 [dependencies]
-win-toast-notify = "0.1.1"
+win-toast-notify = "0.1.2"
 ```
 
 ## Examples
@@ -55,7 +55,7 @@ fn main() {
 
 ![image](https://raw.githubusercontent.com/iKineticate/win-toast-notify/main/examples/images/example_en.png)
 
-## 问题
+## Issues
 
 1.After you set an APP ID that does not exist in the system, please set `set_notif_open("")` to ensure that notifications can be delivered, and the notification without app icon
 
