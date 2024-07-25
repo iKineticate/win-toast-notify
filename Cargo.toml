@@ -1,6 +1,6 @@
 [package]
 name = "win-toast-notify"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 authors = ["iKineticate"]
 keywords = ["notification", "windows", "toast", "notify"]
@@ -10,7 +10,7 @@ repository = "https://github.com/iKineticate/win-toast-notify"
 homepage = "https://github.com/iKineticate/win-toast-notify"
 documentation = "https://docs.rs/win-toast-notify"
 license = "MIT"
-exclude = ["examples/*"]
+exclude = ["examples", "screenshots"]
 
 [dependencies]
 xml = "0.8.20"

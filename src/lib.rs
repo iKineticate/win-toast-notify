@@ -6,7 +6,8 @@ use xml::escape::escape_str_attribute;
 pub struct WinToastNotify {
     pub app_id: Option<String>,
     pub duration: Duration,
-    pub notif_open: Option<String>,
+    pub scenario: Scenario,
+    pub open: Option<String>,
     pub title: Option<String>,
     pub messages: Option<Vec<String>>,
     pub logo: Option<String>,
@@ -14,6 +15,7 @@ pub struct WinToastNotify {
     pub image: Option<String>,
     pub image_placement: ImagePlacement,
     pub actions: Option<Vec<Action>>,
+    pub progress: Option<Progress>,
     pub audio: Option<Audio>,
     pub audio_loop: Loop,
 }
@@ -28,10 +30,11 @@ impl WinToastNotify {
     pub fn new() -> Self {
         Self {
             app_id: None,
-            notif_open: None,
+            open: None,
             duration: Duration::Short,
+            scenario: Scenario::None,
             title: None,
-            messages: Some(vec![String::from("Hellow World")]),
+            messages: Some(vec![String::from("")]),
             logo: None,
             logo_circle: CropCircle::False,
             image: None,
@@ -39,6 +42,7 @@ impl WinToastNotify {
             actions: None,
             audio: Some(Audio::WinDefault),
             audio_loop: Loop::False,
+            progress: None,
         }
     }
 
@@ -58,13 +62,12 @@ impl WinToastNotify {
     /// 
     /// # Warning:
     /// 
-    /// After you set an APP ID that does not exist in the system, please set `set_notif_open("")` to ensure that notifications can be delivered, and the notification without app icon
+    /// After you set an APP ID that does not exist in the system, please set `set_open("")` to ensure that notifications can be delivered, and the notification without app icon
     /// ```
-    /// use win_toast_notify::*; 
+    /// use win_toast_notify::WinToastNotify;
     /// 
     /// WinToastNotify::new()
-    ///     .set_app_id("app name")
-    ///     .set_notif_open("")
+    ///     .set_app_id("{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe")
     ///     .show()
     ///     .expect("Failed to show toast notification");
     /// ```
@@ -91,18 +94,24 @@ impl WinToastNotify {
         self
     }
 
+    /// [Microsoft Docs about Scenario](https://learn.microsoft.com/en-us/uwp/schemas/tiles/toastschema/element-toast#:~:text=None-,scenario,-The%20scenario%20your)
+    pub fn set_scenario(mut self, scenario: Scenario) -> Self {
+        self.scenario = scenario;
+        self
+    }
+
     /// Open link when notification is clicked.
     /// # Examples
     /// ```
-    /// use win_toast_notify::*; 
+    /// use win_toast_notify::WinToastNotify;
     /// 
     /// WinToastNotify::new()
-    ///     .set_notif_open("https://www.google.com/")    // "C:/Windows/Web/Screen/img104.jpg"
+    ///     .set_open("https://www.google.com/")    // "C:/Windows/Web/Screen/img104.jpg"
     ///     .show()
     ///     .expect("Failed to show toast notification");
     /// ```
-    pub fn set_notif_open(mut self, url_or_path: &str) -> Self {
-        self.notif_open = Some(escape_str_attribute(url_or_path.trim()).into_owned());
+    pub fn set_open(mut self, url_or_path: &str) -> Self {
+        self.open = Some(escape_str_attribute(url_or_path.trim()).into_owned());
         self
     }
 
@@ -118,7 +127,7 @@ impl WinToastNotify {
     /// Only supports adding two messages, but line breaks are allowed in the message content.
     /// # Examples
     /// ```
-    /// use win_toast_notify::*; 
+    /// use win_toast_notify::WinToastNotify;
     /// 
     /// WinToastNotify::new()
     ///     .set_messages(vec![
@@ -151,7 +160,7 @@ impl WinToastNotify {
     /// # Example
     /// ```
     /// // Add two buttons to the notification.
-    /// use win_toast_notify::*;
+    /// use win_toast_notify::{WinToastNotify, Action};
     /// 
     /// WinToastNotify::new()
     ///     .set_actions(vec![
@@ -180,13 +189,146 @@ impl WinToastNotify {
         self
     }
 
+    /// Set Progress.
+    /// 
+    /// tag: Define a tag (and optionally a group) to uniquely identify the notification, in order update the notification data later;
+    /// 
+    /// To avoid notifications disappearing when progress is not completed, 
+    /// it is recommended to set the notification's Scenario to incomingCall and the Audio to silent
+    /// 
+    /// # Example
+    /// ```
+    /// use win_toast_notify::{WinToastNotify, CropCircle, Duration, Scenario, Progress, Audio, Loop};
+    /// fn main() {
+    ///     WinToastNotify::new()
+    ///         //.set_duration(Duration::Long)
+    ///         .set_scenario(Scenario::IncomingCall)
+    ///         .set_title("Downloading miHoYo Game...")
+    ///         .set_progress(Progress {
+    ///             tag: "tag",
+    ///             title:"Honkai: Star Rail",
+    ///             status:"Download...",
+    ///             value: 0.0, 
+    ///             value_string: "0%"
+    ///         })
+    ///         .set_audio(Audio::Silent, Loop::False)
+    ///         .show()
+    ///         .expect("Failed to show toast notification");
+    ///
+    ///     for i in 1..=10 {
+    ///         std::thread::sleep(std::time::Duration::from_secs(40));
+    ///         let i_f32 = i as f32 / 10.0;
+    ///         WinToastNotify::progress_update(None, "tag", i_f32, &format!("{:.1}%", i_f32 * 100.0)).expect("Failed to update");
+    ///     };
+    ///
+    ///     WinToastNotify::progress_complete(None, "tag", "Completed", "100%").expect("Failed to complete");
+    /// }    
+    /// ```
+    /// 
+    pub fn set_progress(mut self, progress: Progress
+    ) -> Self {
+        self.progress = Some(progress);
+        self
+    }
+    
+    /// Update the notification progress for the specified APP ID and tag
+    pub fn progress_update(
+        app_id: Option<&str>,
+        tag: &str,
+        value: f32,
+        value_string: &str
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let mut command = String::new();
+        write!(
+            command,
+            r#"
+            $Dictionary = [System.Collections.Generic.Dictionary[String, String]]::New()
+            $Dictionary.Add('progressValue', {})
+            $Dictionary.Add('progressValueString', "{}")
+            $NotificationData = [Windows.UI.Notifications.NotificationData]::New($Dictionary)
+            $NotificationData.SequenceNumber = 2
+            $AppId = '{}'
+            $Notifier = [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime]::CreateToastNotifier($AppId)
+            $Notifier.Update($NotificationData, '{}')
+            "#,
+            value,
+            value_string,
+            match app_id{
+                Some(app_id) => app_id,
+                None => r"{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe",
+            },
+            tag,
+        )?;
+
+        // Run it by PowerShell
+        let output = Command::new("powershell")
+            .creation_flags(0x08000000)
+            .args(["-Command", &command])
+            .output()
+            .map_err(|e| format!("Failed to execute process: {}", e))?;
+        if !output.status.success() {
+            return Err(format!(
+                "Failed to execute command: {}",
+                String::from_utf8_lossy(&output.stderr)
+            )
+            .into());
+        }
+
+        Ok(())
+    }
+
+    pub fn progress_complete(
+        app_id: Option<&str>,
+        tag: &str,
+        status: &str,
+        value_string: &str
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let mut command = String::new();
+        write!(
+            command,
+            r#"
+                $Dictionary = [System.Collections.Generic.Dictionary[String, String]]::New()
+                $Dictionary.Add('progressStatus', '{}')
+                $Dictionary.Add('progressValue', 1)
+                $Dictionary.Add('progressValueString', "{}")
+                $NotificationData = [Windows.UI.Notifications.NotificationData]::New($Dictionary)
+                $NotificationData.SequenceNumber = 2
+                $AppId = '{}'
+                $Notifier = [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime]::CreateToastNotifier($AppId)
+                $Notifier.Update($NotificationData, '{}')
+            "#,
+            status,
+            value_string,
+            match app_id {
+                Some(app_id) => app_id,
+                None => 
+                    r"{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe",
+            },
+            tag,
+        )?;
+        // Run it by PowerShell
+        let output = Command::new("powershell")
+            .creation_flags(0x08000000)
+            .args(["-Command", &command])
+            .output()
+            .map_err(|e| format!("Failed to execute process: {}", e))?;
+        if !output.status.success() {
+            return Err(format!(
+                "Failed to execute command: {}",
+                String::from_utf8_lossy(&output.stderr)
+            ).into());
+        }
+
+        Ok(())
+    }
+
     /// Set the notification sound and whether the sound should loop.
     /// 
     /// Default is [Audio::WinDefault](enum.Audio.html)
     /// 
     /// # Example
     /// ```
-    /// use win_toast_notify::*;
+    /// use win_toast_notify::{WinToastNotify, Audio, Loop};
     /// 
     /// // Use system audio and loop it.
     /// WinToastNotify::new()
@@ -215,9 +357,10 @@ impl WinToastNotify {
         write!(
             command,
             r#"
-            <toast{}{}>
+            <toast{}{}{}{}>
                 <visual>
                     <binding template="ToastGeneric">
+                        {}
                         {}
                         {}
                         {}
@@ -230,14 +373,24 @@ impl WinToastNotify {
                 {}
             </toast>
             "#,
-            match &self.notif_open {
+            match &self.open {
                 Some(url_or_path) => format!(r#" activationType="protocol" launch="{}""#, url_or_path),
                 None => String::new(),
             },
             match &self.duration {
                 Duration::Short => "",
                 Duration::Long => " duration=\"long\"",
-                Duration::TimeOut => " scenario=\"incomingCall\"",
+            },
+            match &self.scenario {
+                Scenario::None => "",
+                Scenario::Reminder => " scenario=\"reminder\"",
+                Scenario::Alarm => " scenario=\"alarm\"",
+                Scenario::IncomingCall => " scenario=\"incomingCall\"",
+                Scenario::Urgent => " scenario=\"urgent\"",
+            },
+            match &self.progress {
+                Some(_) => format!(r#" launch="action=viewDownload&amp;downloadId=9438108""#),
+                None => String::new(),
             },
             match (&self.logo, &self.logo_circle) {
                 (Some(logo), CropCircle::True) => format!(
@@ -264,6 +417,18 @@ impl WinToastNotify {
                 (Some(image), ImagePlacement::Bottom) => format!("\n<image src=\"{}\"/>", &image),
                 (None, _) => String::new(),
             },
+            match &self.progress {
+                Some(_) => format!(
+                    r#"
+                    <progress
+                        title="{{progressTitle}}"
+                        value="{{progressValue}}"
+                        valueStringOverride="{{progressValueString}}"
+                        status="{{progressStatus}}"/>
+                    "#
+                ),
+                None => String::new(),
+            },
             match &self.actions {
                 Some(actions) => actions.iter().fold(String::new(), |acc, action| {
                     format!(
@@ -271,8 +436,8 @@ impl WinToastNotify {
                         acc,
                         escape_str_attribute(action.action_content).into_owned(),
                         action.activation_type.as_str(),
-                        escape_str_attribute(action.arguments).into_owned(),
-                        action.image_url.map_or(String::new(), |url| format!("imageUri=\"{}\"", escape_str_attribute(url.trim()).into_owned())),
+                        escape_str_attribute(&action.arguments).into_owned(),
+                        action.image_url.clone().map_or(String::new(), |url| format!("imageUri=\"{}\"", escape_str_attribute(url.trim()).into_owned())),
                     )
                 }),
                 None => String::new(),
@@ -297,13 +462,36 @@ impl WinToastNotify {
             $XmlDocument = [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime]::New()
             $XmlDocument.loadXml($xml)
             $AppId = '{}'
-            [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime]::CreateToastNotifier($AppId).Show($XmlDocument)
+            {}
             "#,
             match &self.app_id {
                 Some(id) => id,
                 None =>
                     r"{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe",
-            }
+            },
+            match &self.progress {
+                Some(progress) => {format!(
+                        "
+                        $ToastNotification = [Windows.UI.Notifications.ToastNotification, Windows.UI.Notifications, ContentType = WindowsRuntime]::New($XmlDocument)
+                        $ToastNotification.Tag = '{}'
+                        $Dictionary = [System.Collections.Generic.Dictionary[String, String]]::New()
+                        $Dictionary.Add('progressTitle', '{}')
+                        $Dictionary.Add('progressValue', '{}')
+                        $Dictionary.Add('progressValueString', '{}')
+                        $Dictionary.Add('progressStatus', '{}')
+                        $ToastNotification.Data = [Windows.UI.Notifications.NotificationData]::New($Dictionary)
+                        $ToastNotification.Data.SequenceNumber = 1
+                        [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime]::CreateToastNotifier($AppId).Show($ToastNotification)
+                        ",
+                        progress.tag,
+                        progress.title,
+                        progress.value,
+                        progress.value_string,
+                        progress.status
+                    )
+                },
+                None => "[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime]::CreateToastNotifier($AppId).Show($XmlDocument)".into(),
+            },
         )?;
         // Add Audio Source
         if let Some(Audio::From(url)) = &self.audio {
@@ -339,14 +527,21 @@ impl WinToastNotify {
 pub enum Duration {
     Short,
     Long,
-    TimeOut,
 }
 
+// The scenario your toast is used for, like an alarm or reminder.
+pub enum Scenario {
+    None,
+    Reminder,
+    Alarm,
+    IncomingCall,
+    Urgent,
+}
 pub struct Action {
     pub activation_type: ActivationType,
     pub action_content: &'static str,
-    pub arguments: &'static str,
-    pub image_url: Option<&'static str>,
+    pub arguments: String,
+    pub image_url: Option<String>,
 }
 
 /// [Microsoft Docs about Button](https://learn.microsoft.com/en-us/uwp/schemas/tiles/toastschema/element-action)
@@ -377,6 +572,14 @@ pub enum CropCircle {
 pub enum ImagePlacement {
     Top,
     Bottom,
+}
+
+pub struct Progress {
+    pub tag: &'static str,
+    pub title: &'static str,
+    pub status: &'static str,
+    pub value: f32,
+    pub value_string: &'static str,
 }
 
 // System Audio
@@ -444,7 +647,7 @@ impl Audio {
     }
 }
 
-// 音频循环
+// Audio Loop
 pub enum Loop {
     True,
     False,
