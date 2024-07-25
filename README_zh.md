@@ -5,9 +5,9 @@
 - [wpush.rs](https://github.com/saez-juan/wpush.rs)
 - [toast-notification-examples](https://github.com/GitHub30/toast-notification-examples)
 
-
-
 [查看文档](https://docs.rs/win-toast-notify)
+
+[更新日志](./CHANGELOG.md)
 
 ## 使用
 ```toml

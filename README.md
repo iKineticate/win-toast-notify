@@ -10,7 +10,7 @@ Tested in Windows 11
 
 [Read the documentaton](https://docs.rs/win-toast-notify)
 
-[CHANGE]('./CHANGELOG.md')
+[CHANGE](./CHANGELOG.md)
 
 ## Usage
 ```toml
