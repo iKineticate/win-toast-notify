@@ -3,7 +3,7 @@ use std::os::windows::process::CommandExt;
 use std::process::Command;
 use xml::escape::escape_str_attribute;
 
-pub struct WinToastNotify {
+pub struct WinToastNotify<'a> {
     pub app_id: Option<String>,
     pub duration: Duration,
     pub scenario: Scenario,
@@ -14,19 +14,19 @@ pub struct WinToastNotify {
     pub logo_circle: CropCircle,
     pub image: Option<String>,
     pub image_placement: ImagePlacement,
-    pub actions: Option<Vec<Action>>,
-    pub progress: Option<Progress>,
+    pub actions: Option<Vec<Action<'a>>>,
+    pub progress: Option<Progress<'a>>,
     pub audio: Option<Audio>,
     pub audio_loop: Loop,
 }
 
-impl Default for WinToastNotify {
+impl<'a> Default for WinToastNotify<'a> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl WinToastNotify {
+impl<'a> WinToastNotify<'a> {
     pub fn new() -> Self {
         Self {
             app_id: None,
@@ -67,7 +67,7 @@ impl WinToastNotify {
     /// use win_toast_notify::WinToastNotify;
     /// 
     /// WinToastNotify::new()
-    ///     .set_app_id("{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe")
+    ///     .set_app_id(r"{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe")
     ///     .show()
     ///     .expect("Failed to show toast notification");
     /// ```
@@ -106,6 +106,7 @@ impl WinToastNotify {
     /// use win_toast_notify::WinToastNotify;
     /// 
     /// WinToastNotify::new()
+    ///     .set_title("Click me")
     ///     .set_open("https://www.google.com/")    // "C:/Windows/Web/Screen/img104.jpg"
     ///     .show()
     ///     .expect("Failed to show toast notification");
@@ -130,9 +131,10 @@ impl WinToastNotify {
     /// use win_toast_notify::WinToastNotify;
     /// 
     /// WinToastNotify::new()
+    ///     .set_title("Title")
     ///     .set_messages(vec![
-    ///         "Heads up The wheels are spinning\nAcross the plains in valleys deep",
-    ///         "To dawn the wheels that sing\nAn unending dream"
+    ///         "Mysterious Code",
+    ///         "Infinitely Recursive Code"
     ///     ])
     ///     .show()
     ///     .expect("Failed to show toast notification");
@@ -160,7 +162,7 @@ impl WinToastNotify {
     /// # Example
     /// ```
     /// // Add two buttons to the notification.
-    /// use win_toast_notify::{WinToastNotify, Action};
+    /// use win_toast_notify::{WinToastNotify, Action, ActivationType};
     /// 
     /// WinToastNotify::new()
     ///     .set_actions(vec![
@@ -172,7 +174,7 @@ impl WinToastNotify {
     ///         },
     ///         Action {
     ///             activation_type: ActivationType::Protocol,
-    ///             action_content: "Open File",
+    ///             action_content: "Open A File",
     ///             arguments: r"C:\Windows\Web\Screen\img104.jpg",
     ///             image_url: None
     ///         }
@@ -184,7 +186,7 @@ impl WinToastNotify {
     /// You can only have up to 5 buttons
     /// 
     /// [Microsoft Docs about Button](https://learn.microsoft.com/en-us/windows/apps/design/shell/tiles-and-notifications/adaptive-interactive-toasts?tabs=appsdk#buttons)
-    pub fn set_actions(mut self, actions: Vec<Action>) -> Self {
+    pub fn set_actions(mut self, actions: Vec<Action<'a>>) -> Self {
         self.actions = Some(actions);
         self
     }
@@ -200,32 +202,36 @@ impl WinToastNotify {
     /// ```
     /// use win_toast_notify::{WinToastNotify, CropCircle, Duration, Scenario, Progress, Audio, Loop};
     /// fn main() {
+    ///     let tag = "weekly-playlist";
+    ///     let title = "Weekly playlist";
+    ///     let mut status = String::from("Downloading...");
+    ///     let mut value = 0.0;
+    ///     let mut value_string = String::from("0/10 songs");
+    /// 
     ///     WinToastNotify::new()
-    ///         //.set_duration(Duration::Long)
     ///         .set_scenario(Scenario::IncomingCall)
-    ///         .set_title("Downloading miHoYo Game...")
-    ///         .set_progress(Progress {
-    ///             tag: "tag",
-    ///             title:"Honkai: Star Rail",
-    ///             status:"Download...",
-    ///             value: 0.0, 
-    ///             value_string: "0%"
-    ///         })
+    ///         .set_title("Downloading your weekly playlist...")
+    ///         .set_progress(Progress {tag, title, status, value, value_string})
     ///         .set_audio(Audio::Silent, Loop::False)
     ///         .show()
     ///         .expect("Failed to show toast notification");
     ///
     ///     for i in 1..=10 {
-    ///         std::thread::sleep(std::time::Duration::from_secs(40));
-    ///         let i_f32 = i as f32 / 10.0;
-    ///         WinToastNotify::progress_update(None, "tag", i_f32, &format!("{:.1}%", i_f32 * 100.0)).expect("Failed to update");
+    ///         std::thread::sleep(std::time::Duration::from_secs(1));
+    ///         value = i as f32 / 10.0;
+    ///         if i != 10 {
+    ///             value_string = format!("{}/10 songs", i);
+    ///             WinToastNotify::progress_update(None, tag, value, value_string).expect("Failed to update");
+    ///         } else {
+    ///             status = String::from("Completed");
+    ///             value_string = String::from("10/10 songs");
+    ///             WinToastNotify::progress_complete(None, tag, status, value_string).expect("Failed to complete");
+    ///         };
     ///     };
-    ///
-    ///     WinToastNotify::progress_complete(None, "tag", "Completed", "100%").expect("Failed to complete");
     /// }    
     /// ```
     /// 
-    pub fn set_progress(mut self, progress: Progress
+    pub fn set_progress(mut self, progress: Progress<'a>
     ) -> Self {
         self.progress = Some(progress);
         self
@@ -236,7 +242,7 @@ impl WinToastNotify {
         app_id: Option<&str>,
         tag: &str,
         value: f32,
-        value_string: &str
+        value_string: String
     ) -> Result<(), Box<dyn std::error::Error>> {
         let mut command = String::new();
         write!(
@@ -251,8 +257,8 @@ impl WinToastNotify {
             $Notifier = [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime]::CreateToastNotifier($AppId)
             $Notifier.Update($NotificationData, '{}')
             "#,
-            value,
-            value_string,
+            &value,
+            &value_string,
             match app_id{
                 Some(app_id) => app_id,
                 None => r"{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe",
@@ -280,25 +286,25 @@ impl WinToastNotify {
     pub fn progress_complete(
         app_id: Option<&str>,
         tag: &str,
-        status: &str,
-        value_string: &str
+        status: String,
+        value_string: String
     ) -> Result<(), Box<dyn std::error::Error>> {
         let mut command = String::new();
         write!(
             command,
             r#"
-                $Dictionary = [System.Collections.Generic.Dictionary[String, String]]::New()
-                $Dictionary.Add('progressStatus', '{}')
-                $Dictionary.Add('progressValue', 1)
-                $Dictionary.Add('progressValueString', "{}")
-                $NotificationData = [Windows.UI.Notifications.NotificationData]::New($Dictionary)
-                $NotificationData.SequenceNumber = 2
-                $AppId = '{}'
-                $Notifier = [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime]::CreateToastNotifier($AppId)
-                $Notifier.Update($NotificationData, '{}')
+            $Dictionary = [System.Collections.Generic.Dictionary[String, String]]::New()
+            $Dictionary.Add('progressStatus', '{}')
+            $Dictionary.Add('progressValue', 1)
+            $Dictionary.Add('progressValueString', "{}")
+            $NotificationData = [Windows.UI.Notifications.NotificationData]::New($Dictionary)
+            $NotificationData.SequenceNumber = 2
+            $AppId = '{}'
+            $Notifier = [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime]::CreateToastNotifier($AppId)
+            $Notifier.Update($NotificationData, '{}')
             "#,
-            status,
-            value_string,
+            &status,
+            &value_string,
             match app_id {
                 Some(app_id) => app_id,
                 None => 
@@ -436,8 +442,10 @@ impl WinToastNotify {
                         acc,
                         escape_str_attribute(action.action_content).into_owned(),
                         action.activation_type.as_str(),
-                        escape_str_attribute(&action.arguments).into_owned(),
-                        action.image_url.clone().map_or(String::new(), |url| format!("imageUri=\"{}\"", escape_str_attribute(url.trim()).into_owned())),
+                        escape_str_attribute(action.arguments).into_owned(),
+                        action.image_url.map_or_else(
+                            || String::new(),
+                            |url| format!("imageUri=\"{}\"", escape_str_attribute(url.trim()).into_owned())),
                     )
                 }),
                 None => String::new(),
@@ -485,9 +493,9 @@ impl WinToastNotify {
                         ",
                         progress.tag,
                         progress.title,
-                        progress.value,
-                        progress.value_string,
-                        progress.status
+                        &progress.value,
+                        &progress.value_string,
+                        &progress.status
                     )
                 },
                 None => "[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime]::CreateToastNotifier($AppId).Show($XmlDocument)".into(),
@@ -537,11 +545,11 @@ pub enum Scenario {
     IncomingCall,
     Urgent,
 }
-pub struct Action {
+pub struct Action<'a> {
     pub activation_type: ActivationType,
-    pub action_content: &'static str,
-    pub arguments: String,
-    pub image_url: Option<String>,
+    pub action_content: &'a str,
+    pub arguments: &'a str,
+    pub image_url: Option<&'a str>,
 }
 
 /// [Microsoft Docs about Button](https://learn.microsoft.com/en-us/uwp/schemas/tiles/toastschema/element-action)
@@ -553,7 +561,7 @@ pub enum ActivationType {
 }
 
 impl ActivationType {
-    pub fn as_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &str {
         match self {
             ActivationType::Foreground => "foreground",
             ActivationType::Background => "background",
@@ -574,17 +582,17 @@ pub enum ImagePlacement {
     Bottom,
 }
 
-pub struct Progress {
-    pub tag: &'static str,
-    pub title: &'static str,
-    pub status: &'static str,
+pub struct Progress<'a> {
+    pub tag: &'a str,
+    pub title: &'a str,
+    pub status: String,
     pub value: f32,
-    pub value_string: &'static str,
+    pub value_string: String,
 }
 
 // System Audio
 pub enum Audio {
-    From(&'static str),
+    From(String),
     Silent,
     WinDefault,
     WinIM,
@@ -614,7 +622,7 @@ pub enum Audio {
 }
 
 impl Audio {
-    pub fn as_str(&self) -> &'static str {
+    pub fn as_str(&self) -> &str {
         match self {
             Audio::From(url) => url,
             Audio::Silent => "",

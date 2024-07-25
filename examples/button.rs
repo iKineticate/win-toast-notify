@@ -10,13 +10,13 @@ fn main() {
             Action {
                 activation_type: ActivationType::Protocol,
                 action_content: "Open Github",
-                arguments: "https://github.com/".to_string(),
+                arguments: "https://github.com/",
                 image_url: None,
             },
             Action {
                 activation_type: ActivationType::Protocol,
                 action_content: "Open Wallpaper",
-                arguments: r"C:\Windows\Web\Screen\img101.jpg".to_string(),
+                arguments: r"C:\Windows\Web\Screen\img101.jpg",
                 image_url: None,
             }
         ])

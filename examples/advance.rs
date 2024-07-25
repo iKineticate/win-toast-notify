@@ -3,7 +3,7 @@ use std::env;
 
 fn main() {
     let current_dir = env::current_dir().expect("Failed to get current directory");
-    let logo_path = current_dir.clone().join("examples/album_artist.png");
+    let logo_path = current_dir.join("examples/album_artist.png");
     let image_path = current_dir.join("examples/album_cover.jpg");
     let introduce_url = "https://honkai-star-rail.fandom.com/wiki/Hope_Is_the_Thing_With_Feathers";
     let music_url = "https://t.co/6urFxrI6K0";
@@ -17,19 +17,19 @@ fn main() {
             "Heads up the wheels are spinning\nAcross the plains in valleys deep",
             "To dawn the wheels that sing\nAn unending dream"
         ])
-        .set_logo(logo_path.to_str().expect("Failed to convert path to string"), CropCircle::True)
-        .set_image(image_path.to_str().expect("Failed to convert path to string"), ImagePlacement::Top)
+        .set_logo(logo_path.to_str().expect("Path is an invalid unicode"), CropCircle::True)
+        .set_image(image_path.to_str().expect("Path is an invalid unicode"), ImagePlacement::Top)
         .set_actions(vec![
             Action {
                 activation_type: ActivationType::Protocol,
                 action_content: "Listen",
-                arguments: music_url.to_string(),
+                arguments: music_url,
                 image_url: None,
             },
             Action {
                 activation_type: ActivationType::Protocol,
                 action_content: "Lyric",
-                arguments: music_lyric.to_string(),
+                arguments: music_lyric,
                 image_url: None,
             }
         ])

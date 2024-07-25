@@ -2,7 +2,7 @@ use win_toast_notify::{WinToastNotify, Action, ActivationType};
 
 fn main() {
     let current_dir = std::env::current_dir().expect("Failed to get current directory");
-    let button_read_path = current_dir.clone().join("examples/button_read.png");
+    let button_read_path = current_dir.join("examples/button_read.png");
     let button_appreciation_path = current_dir.join("examples/button_appreciation.png");
 
     WinToastNotify::new()
@@ -15,14 +15,14 @@ fn main() {
             Action {
                 activation_type: ActivationType::Protocol,
                 action_content: "",
-                arguments: "https://doc.rust-lang.org/book/".to_string(),
-                image_url: Some(button_appreciation_path.to_string_lossy().into_owned()),
+                arguments: "https://doc.rust-lang.org/book/",
+                image_url: Some(button_appreciation_path.to_str().expect("Path is an invalid unicode")),
             },
             Action {
                 activation_type: ActivationType::Protocol,
                 action_content: "",
-                arguments: r"C:\Windows\Web\Screen\img101.jpg".to_string(),
-                image_url: Some(button_read_path.to_string_lossy().into_owned()),
+                arguments: r"C:\Windows\Web\Screen\img101.jpg",
+                image_url: Some(button_read_path.to_str().expect("Path is an invalid unicode")),
             }
         ])
         .show()
