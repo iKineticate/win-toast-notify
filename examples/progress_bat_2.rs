@@ -17,7 +17,7 @@ fn main() {
         .set_messages(vec![
             "May This Journey Lead Us Starward"
         ])
-        .set_logo(logo_path.to_str().expect("Failed to convert path to string"), CropCircle::True)
+        .set_logo(logo_path.to_str().expect("Path is an invalid unicode"), CropCircle::True)
         .set_progress(Progress {tag, title, status, value, value_string} )
         .show()
         .expect("Failed to show toast notification");

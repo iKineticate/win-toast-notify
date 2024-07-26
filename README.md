@@ -1,16 +1,20 @@
 <h3 align="center"> English | <a href='./README_zh.md'>简体中文</a></h3>
 
 # win-toast-notiy
-This is a library for sending Windows Toast notifications, mainly referencing the following two projects:
+win-toast-notify is a Rust library for sending Windows Toast notifications. This library is primarily inspired by the following projects:
 
 - [wpush.rs](https://github.com/saez-juan/wpush.rs)
 - [toast-notification-examples](https://github.com/GitHub30/toast-notification-examples)
 
-Tested in Windows 11
+This library has been tested on Windows 11.
 
-[Read the documentaton](https://docs.rs/win-toast-notify)
+**Important Notice: This library is currently in an unstable state.**
 
-[CHANGE](./CHANGELOG.md)
+## Documentation
+For detailed usage and API reference, please refer to the [documentation](https://docs.rs/win-toast-notify).
+
+## Changelog
+For recent changes and updates, see the [CHANGELOG](./CHANGELOG.md).
 
 ## Usage
 ```toml
@@ -147,7 +151,7 @@ fn main() {
         .set_messages(vec![
             "May This Journey Lead Us Starward"
         ])
-        .set_logo(logo_path.to_str().expect("Failed to convert path to string"), CropCircle::True)
+        .set_logo(logo_path.to_str().expect("Path is an invalid unicode"), CropCircle::True)
         .set_progress(Progress {tag, title, status, value, value_string} )
         .show()
         .expect("Failed to show toast notification");

@@ -1,13 +1,22 @@
 # win-toast-notiy
 
-这是一个发送Windows Toast通知的库，主要参考了以下两个项目：
+**Win Toast Notify** 是一个用于发送 Windows Toast 通知的 Rust 库。该库主要参考了以下项目：
 
 - [wpush.rs](https://github.com/saez-juan/wpush.rs)
 - [toast-notification-examples](https://github.com/GitHub30/toast-notification-examples)
 
-[查看文档](https://docs.rs/win-toast-notify)
+该库已经在 Windows 11 上进行了测试。
 
-[更新日志](./CHANGELOG.md)
+**重要通知：** 该库目前处于不稳定状态。
+
+## 文档
+
+有关详细的使用和 API 参考，请参阅[文档](https://docs.rs/win-toast-notify)。
+
+## 更新日志
+
+有关最近的更改和更新，请参阅[更新日志](./CHANGELOG.md)。
+
 
 ## 使用
 ```toml
@@ -146,7 +155,7 @@ fn main() {
         .set_messages(vec![
             "May This Journey Lead Us Starward"
         ])
-        .set_logo(logo_path.to_str().expect("Failed to convert path to string"), CropCircle::True)
+        .set_logo(logo_path.to_str().expect("Path is an invalid unicode"), CropCircle::True)
         .set_progress(Progress {tag, title, status, value, value_string} )
         .show()
         .expect("Failed to show toast notification");
