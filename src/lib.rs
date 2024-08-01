@@ -165,6 +165,8 @@ impl WinToastNotify {
     /// use win_toast_notify::{WinToastNotify, Action, ActivationType};
     /// 
     /// WinToastNotify::new()
+    ///     .set_title("Hellow World")
+    ///     .set_messages(vec!["There are three buttons here"])
     ///     .set_actions(vec![
     ///         Action {
     ///             activation_type: ActivationType::Protocol,
