@@ -24,15 +24,15 @@ fn main() {
         .set_actions(vec![
             Action {
                 activation_type: ActivationType::Protocol,
-                action_content: "阅读",
-                arguments: read_url,
-                image_url: Some(button_read_path.to_str().expect("Path is an invalid unicode")),
+                action_content: "阅读".to_string(),
+                arguments: read_url.to_string(),
+                image_url: Some(button_read_path.to_string_lossy().to_string()),
             },
             Action {
                 activation_type: ActivationType::Protocol,
-                action_content: "赏析",
-                arguments: appreciation_url,
-                image_url: Some(button_appreciation_path.to_str().expect("Path is an invalid unicode")),
+                action_content: "赏析".to_string(),
+                arguments: appreciation_url.to_string(),
+                image_url: Some(button_appreciation_path.to_string_lossy().to_string()),
             }
         ])
         .set_audio(Audio::WinLoopingAlarm5, Loop::True)

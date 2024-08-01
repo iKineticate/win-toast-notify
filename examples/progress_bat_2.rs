@@ -1,4 +1,4 @@
-use win_toast_notify::{WinToastNotify, CropCircle, Duration, Progress};
+use win_toast_notify::{WinToastNotify, CropCircle, Duration};
 use std::env;
 
 fn main() {
@@ -18,7 +18,7 @@ fn main() {
             "May This Journey Lead Us Starward"
         ])
         .set_logo(logo_path.to_str().expect("Path is an invalid unicode"), CropCircle::True)
-        .set_progress(Progress {tag, title, status, value, value_string} )
+        .set_progress(tag, title, &status, value, &value_string)
         .show()
         .expect("Failed to show toast notification");
 
@@ -27,11 +27,11 @@ fn main() {
         value = i as f32 / 10.0;
         if i != 10 {
             value_string = format!("{:.1}%", value * 100.0);
-            WinToastNotify::progress_update(None, tag, value, value_string).expect("Failed to update");
+            WinToastNotify::progress_update(None, tag, value, &value_string).expect("Failed to update");
         } else {
             status = String::from("Completed");
             value_string = String::from("100%");
-            WinToastNotify::progress_complete(None, tag, status, value_string).expect("Failed to complete");
+            WinToastNotify::progress_complete(None, tag, &status, &value_string).expect("Failed to complete");
         };
     };
 }

@@ -22,7 +22,7 @@
 ```toml
 #Cargo.toml
 [dependencies]
-win-toast-notify = "0.1.5"
+win-toast-notify = "0.1.6"
 ```
 
 ## 例子
@@ -56,24 +56,28 @@ use win_toast_notify::{WinToastNotify, Action, ActivationType};
 
 fn main() {
     WinToastNotify::new()
-        .set_title("Hellow World")
-        .set_messages(vec!["There are two buttons here"])
         .set_actions(vec![
             Action {
                 activation_type: ActivationType::Protocol,
-                action_content: "Open Github",
-                arguments: "https://github.com/",
-                image_url: None,
+                action_content: "Url".to_string(),
+                arguments: "https://www.google.com/".to_string(),
+                image_url: None
             },
             Action {
                 activation_type: ActivationType::Protocol,
-                action_content: "Open Wallpaper",
-                arguments: r"C:\Windows\Web\Screen\img101.jpg",
-                image_url: None,
-            }
-        ])
-        .show()
-        .expect("Failed to show toast notification")
+                 action_content: "File".to_string(),
+                 arguments: r"C:\Windows\Web\Screen\img104.jpg".to_string(),
+                 image_url: None
+             },
+            Action {
+                 activation_type: ActivationType::Protocol,
+                 action_content: "Folder".to_string(),
+                 arguments: r"$env:USERPROFILE\Downloads".to_string(),   // PowerShell supports using environment variables
+                 image_url: None
+             }
+         ])
+         .show()
+         .expect("Failed to show toast notification");
 }
 ```
 
@@ -112,15 +116,15 @@ fn main() {
         .set_actions(vec![
             Action {
                 activation_type: ActivationType::Protocol,
-                action_content: "阅读",
-                arguments: read_url,
-                image_url: Some(button_read_path.to_str().expect("Path is an invalid unicode")),
+                action_content: "阅读".to_string(),
+                arguments: read_url.to_string(),
+                image_url: Some(button_read_path.to_string_lossy().to_string()),
             },
             Action {
                 activation_type: ActivationType::Protocol,
-                action_content: "赏析",
-                arguments: appreciation_url,
-                image_url: Some(button_appreciation_path.to_str().expect("Path is an invalid unicode")),
+                action_content: "赏析".to_string(),
+                arguments: appreciation_url.to_string(),
+                image_url: Some(button_appreciation_path.to_string_lossy().to_string()),
             }
         ])
         .set_audio(Audio::WinLoopingAlarm5, Loop::True)

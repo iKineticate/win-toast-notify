@@ -14,15 +14,15 @@ fn main() {
         .set_actions(vec![
             Action {
                 activation_type: ActivationType::Protocol,
-                action_content: "",
-                arguments: "https://doc.rust-lang.org/book/",
-                image_url: Some(button_appreciation_path.to_str().expect("Path is an invalid unicode")),
+                action_content: String::new(),
+                arguments: "https://doc.rust-lang.org/book/".to_string(),
+                image_url: Some(button_appreciation_path.to_string_lossy().to_string()),
             },
             Action {
                 activation_type: ActivationType::Protocol,
-                action_content: "",
-                arguments: r"C:\Windows\Web\Screen\img101.jpg",
-                image_url: Some(button_read_path.to_str().expect("Path is an invalid unicode")),
+                action_content: String::new(),
+                arguments: r"C:\Windows\Web\Screen\img101.jpg".to_string(),
+                image_url: Some(button_read_path.to_string_lossy().to_string()),
             }
         ])
         .show()

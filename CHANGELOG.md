@@ -1,3 +1,22 @@
+## 0.1.5 => 0.1.6
+```rust
+pub struct Action<'a> {
+    pub activation_type: ActivationType,
+    pub action_content: &'a str,
+    pub arguments: &'a str,
+    pub image_url: Option<&'a str>,
+}
+👇
+pub struct Action {
+    pub activation_type: ActivationType,
+    pub action_content: String,
+    pub arguments: String,
+    pub image_url: Option<String>,
+}
+```
+
+
+
 ## 0.1.4 => 0.1.5
 ```rust
 // modify❗

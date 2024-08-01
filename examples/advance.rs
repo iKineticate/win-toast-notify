@@ -22,14 +22,14 @@ fn main() {
         .set_actions(vec![
             Action {
                 activation_type: ActivationType::Protocol,
-                action_content: "Listen",
-                arguments: music_url,
+                action_content: "Listen".to_string(),
+                arguments: music_url.to_string(),
                 image_url: None,
             },
             Action {
                 activation_type: ActivationType::Protocol,
-                action_content: "Lyric",
-                arguments: music_lyric,
+                action_content: "Lyric".to_string(),
+                arguments: music_lyric.to_string(),
                 image_url: None,
             }
         ])
