@@ -1,6 +1,6 @@
 <h3 align="center"> English | <a href='./README_zh.md'>简体中文</a></h3>
 
-# win-toast-notiy
+# win-toast-notify
 win-toast-notify is a Rust library for sending Windows Toast notifications. This library is primarily inspired by the following projects:
 
 - [wpush.rs](https://github.com/saez-juan/wpush.rs)
